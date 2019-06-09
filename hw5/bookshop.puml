@@ -1,0 +1,119 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+class Book {
+	-isbn: ISBN
+	-author: Name
+	-title: String
+	-year: Year
+}
+
+class CatalogBook {
+	-price: Price
+	-reviews: Review [*]
+}
+Book <|-- CatalogBook
+
+interface User {
+	-email: Email
+	-address: Address
+	-password: Password
+}
+
+class Wishlist {
+	-books: Book[*]
+	+addBook()
+	+removeBook()
+	+addToCart()
+}
+Wishlist -- Cart
+Wishlist "1" o-- "*" Book
+
+class Customer {
+    -name: Name
+	-wishlist: Wishlist
+	-paymentInfo: PaymentInfo
+	-orders: Order[*]
+
+	+addBookToWishList()
+	+addOrder()
+}
+Customer -|> User
+Customer -- PaymentInfo
+Customer "1" o-- "*" Order
+Customer -- Wishlist
+
+class Administrator {
+	+ addReview()
+	+ approveReview()
+}
+Administrator -|> User
+Review -- Administrator
+
+class OtherMarket {
+    +addBook()
+    +removeBook()
+}
+OtherMarket -|> User
+OtherMarket -- Catalog
+
+class Review {
+    -approved: Bool
+    -text: Text
+    -rating: Rating {1..5}
+	+getFull()
+	+getSnap()
+}
+CatalogBook "1" o-- "*" Review
+
+class Order {
+	-book: CatalogBook[*]
+	-totalPrice: Price
+	-date: Date
+	-status: Status
+	+pay()
+}
+Order "1" o-- "*" CatalogBook
+
+class Cart {
+	-cart: CatalogBook[*]
+	-totalPrice: Price
+	+addToCart()
+	+pay()
+}
+Cart "1" o-- "*" CatalogBook
+Cart -- Payment
+
+class Payment {
+	-to: PaymentInfo
+	-from: PaymentInfo
+	+pay()
+	+rollback()
+}
+
+interface PaymentInfo
+class CreditPaymentInfo
+class TransferPaymentInfo
+TransferPaymentInfo -|> PaymentInfo
+CreditPaymentInfo -|> PaymentInfo
+PaymentInfo -- Payment
+
+class Catalog {
+    #list: CatalogBook[*]
+	+lookupByTitle()
+	+lookupByAuthor()
+	+lookupByKeyword()
+}
+Catalog "1" o-- "*" CatalogBook
+
+class XmlCatalog {
+	+view()
+}
+Catalog <|- XmlCatalog
+
+class WebCatalog {
+	+view()
+}
+Catalog <|- WebCatalog
+
+@enduml
