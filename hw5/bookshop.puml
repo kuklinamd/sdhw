@@ -12,6 +12,22 @@ class CatalogBook {
 	-price: Price
 	-reviews: Review [*]
 }
+
+class Catalog {
+    #list: CatalogBook[*]
+    #subCatalogs: CatalogBook[*]
+	+searchBookByTitle()
+	+searchBookByAuthor()
+	+searchBookByKeyword()
+	+loadCatalogFromDatabase()
+	+addSubCatalog()
+	+view()
+}
+
+
+Catalog "1" o-- "*" CatalogBook
+Catalog -- Database
+
 Book <|-- CatalogBook
 
 class Profile {
@@ -30,42 +46,46 @@ class Wishlist {
 Wishlist -- Cart
 Wishlist "1" o-- "*" Book
 
+together {
 class Customer {
-	-cart: Cart
 	+buy
 	+addToCart
 }
-Customer *-- Cart
 
 class LoginCustomer {
-    -profile: Profile
-	-wishlist: Wishlist
 	-orders: Order[*]
 
 	+addBookToWishList()
 }
-LoginCustomer -|> Customer
-LoginCustomer "1" o-- "*" Order
-LoginCustomer *-- Wishlist
-LoginCustomer *-- Profile
 
 class Administrator {
 	+ addReview()
 	+ approveReview()
 }
-Administrator -|> LoginCustomer
-Review -- Administrator
 
 class OtherMarket {
     +addSubCatalog()
     +removeSubCatalog()
 }
-OtherMarket -|> LoginCustomer
-OtherMarket -- Catalog
 
 class Editor {
 	+sendReview()
 }
+}
+Customer *-- Cart: customer
+
+LoginCustomer -|> Customer
+LoginCustomer "1" o-- "*" Order
+LoginCustomer *-- Wishlist: wishllist
+LoginCustomer *-- Profile: profile
+
+Administrator -|> LoginCustomer
+Review -- Administrator
+
+OtherMarket -|> LoginCustomer
+OtherMarket -- Catalog
+
+
 Editor -|> LoginCustomer
 Editor -- CatalogBook
 Editor -- Review
@@ -87,6 +107,9 @@ class Order {
 	+pay()
 	+addBookToOrder()
 	+removeBookFromOrder()
+	+isPossibleToCancelOrder()
+	+tryToCancelOrder()
+	+applyForRefund()
 }
 Order "1" o-- "*" CatalogBook
 
@@ -106,6 +129,7 @@ class Payment {
 	+rollback()
 }
 
+together {
 interface PaymentMethod {
 	+pay()
 }
@@ -119,6 +143,7 @@ class TransferPaymentMethod {
     -setTransferInfo()
     +pay()
 }
+}
 
 TransferPaymentMethod -|> PaymentMethod
 CreditPaymentMethod -|> PaymentMethod
@@ -127,41 +152,29 @@ Payment *-- PaymentMethod
 class Database
 note top of Database : Связь с базой данных. \n Тип каталога определяется SQL запросом.
 
-class Catalog {
-    #list: CatalogBook[*]
-    #subCatalogs: CatalogBook[*]
-	+searchBookByTitle()
-	+searchBookByAuthor()
-	+searchBookByKeyword()
-	+loadCatalogFromDatabase()
-	+addSubCatalog()
-	+view()
-}
-Catalog "1" o-- "*" CatalogBook
-Catalog -- Database
+together {
+    class MiniCatalog {
+    	+loadMiniCatalogFromDatabase()
+    }
 
-class MiniCatalog {
-	+loadMiniCatalogFromDatabase()
+    class XmlCatalog {
+    	+view()
+    }
+
+    class WebCatalog {
+    	+view()
+    }
 }
 MiniCatalog -- Database
-
-class XmlCatalog {
-	+view()
-}
 MiniCatalog <|- XmlCatalog
-
-class WebCatalog {
-	+view()
-}
 MiniCatalog <|- WebCatalog
 
 class Store {
-	-catalog: Catalog
 	-currentLogins: LoginCustomer[*]
 	-currentGuests: Customer[*]
 	+login()
 }
-Store *-- Catalog
+Store *-- Catalog : catalog
 Store "1" *-- "*" LoginCustomer
 Store "1" *-- "*" Customer
 Store -- Database
