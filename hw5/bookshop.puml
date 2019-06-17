@@ -1,0 +1,182 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+class Book {
+	-isbn: ISBN
+	-author: Name
+	-title: String
+	-year: Year
+}
+
+class CatalogBook {
+	-price: Price
+	-reviews: Review [*]
+}
+
+class Catalog {
+    #list: CatalogBook[*]
+    #subCatalogs: CatalogBook[*]
+	+searchBookByTitle()
+	+searchBookByAuthor()
+	+searchBookByKeyword()
+	+loadCatalogFromDatabase()
+	+addSubCatalog()
+	+view()
+}
+
+
+Catalog "1" o-- "*" CatalogBook
+Catalog -- Database
+
+Book <|-- CatalogBook
+
+class Profile {
+    -name: Name
+	-email: Email
+	-address: Address
+	-password: Password
+}
+
+class Wishlist {
+	-books: Book[*]
+	+addBook()
+	+removeBook()
+	+addToCart()
+}
+Wishlist -- Cart
+Wishlist "1" o-- "*" Book
+
+together {
+class Customer {
+	+buy
+	+addToCart
+}
+
+class LoginCustomer {
+	-orders: Order[*]
+
+	+addBookToWishList()
+}
+
+class Administrator {
+	+ addReview()
+	+ approveReview()
+}
+
+class OtherMarket {
+    +addSubCatalog()
+    +removeSubCatalog()
+}
+
+class Editor {
+	+sendReview()
+}
+}
+Customer *-- Cart: customer
+
+LoginCustomer -|> Customer
+LoginCustomer "1" o-- "*" Order
+LoginCustomer *-- Wishlist: wishllist
+LoginCustomer *-- Profile: profile
+
+Administrator -|> LoginCustomer
+Review -- Administrator
+
+OtherMarket -|> LoginCustomer
+OtherMarket -- Catalog
+
+
+Editor -|> LoginCustomer
+Editor -- CatalogBook
+Editor -- Review
+
+class Review {
+    -approved: Bool
+    -text: Text
+    -rating: Rating {1..5}
+	+getFull()
+	+getSnap()
+}
+CatalogBook "1" o-- "*" Review
+
+class Order {
+	-book: CatalogBook[*]
+	-totalPrice: Price
+	-date: Date
+	-status: Status
+	+pay()
+	+addBookToOrder()
+	+removeBookFromOrder()
+	+isPossibleToCancelOrder()
+	+tryToCancelOrder()
+	+applyForRefund()
+}
+Order "1" o-- "*" CatalogBook
+
+class Cart {
+	-cart: CatalogBook[*]
+	-totalPrice: Price
+	+addToCart()
+	+removeFromCart()
+	+pay()
+}
+Cart "1" o-- "*" CatalogBook
+Cart -- Payment
+
+class Payment {
+	-method: PaymentMethod
+	+pay()
+	+rollback()
+}
+
+together {
+interface PaymentMethod {
+	+pay()
+}
+class CreditPaymentMethod {
+    -card
+    +setCardInfo()
+    +pay()
+}
+class TransferPaymentMethod {
+    -info
+    -setTransferInfo()
+    +pay()
+}
+}
+
+TransferPaymentMethod -|> PaymentMethod
+CreditPaymentMethod -|> PaymentMethod
+Payment *-- PaymentMethod
+
+class Database
+note top of Database : Связь с базой данных. \n Тип каталога определяется SQL запросом.
+
+together {
+    class MiniCatalog {
+    	+loadMiniCatalogFromDatabase()
+    }
+
+    class XmlCatalog {
+    	+view()
+    }
+
+    class WebCatalog {
+    	+view()
+    }
+}
+MiniCatalog -- Database
+MiniCatalog <|- XmlCatalog
+MiniCatalog <|- WebCatalog
+
+class Store {
+	-currentLogins: LoginCustomer[*]
+	-currentGuests: Customer[*]
+	+login()
+}
+Store *-- Catalog : catalog
+Store "1" *-- "*" LoginCustomer
+Store "1" *-- "*" Customer
+Store -- Database
+
+@enduml
